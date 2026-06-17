@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>まなびサポート | 宿題管理</title>
+<style>
+:root {
+  --navy: #1a2e5a;
+  --navy-light: #2d4a8a;
+  --navy-pale: #e8edf8;
+  --accent: #f5a623;
+  --accent-light: #fef3dc;
+  --green: #2d9e6b;
+  --green-light: #e4f7ef;
+  --red: #e24b4a;
+  --red-light: #fcebeb;
+  --amber: #ba7517;
+  --amber-light: #faeeda;
+  --gray-50: #f8f9fa;
+  --gray-100: #f1f3f5;
+  --gray-200: #e9ecef;
+  --gray-400: #adb5bd;
+  --gray-600: #6c757d;
+  --gray-800: #343a40;
+  --white: #ffffff;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Kaku Gothic ProN', 'Yu Gothic UI', sans-serif; background: var(--gray-100); color: var(--gray-800); min-height: 100vh; max-width: 430px; margin: 0 auto; position: relative; overflow-x: hidden; }
+
+/* ========== SCREENS ========== */
+.screen { display: none; min-height: 100vh; flex-direction: column; }
+.screen.active { display: flex; }
+
+/* ========== TOP BAR ========== */
+.topbar { background: var(--navy); color: #fff; padding: 14px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+.topbar-back { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; padding: 4px; line-height: 1; }
+.topbar-title { font-size: 16px; font-weight: 600; flex: 1; }
+.topbar-action { background: none; border: none; color: #fff; font-size: 13px; cursor: pointer; padding: 6px 10px; border-radius: var(--radius-sm); background: rgba(255,255,255,0.15); }
+
+/* ========== BOTTOM NAV ========== */
+.bottom-nav { background: var(--white); border-top: 1px solid var(--gray-200); display: flex; position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; z-index: 100; }
+.nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 4px 12px; border: none; background: none; cursor: pointer; color: var(--gray-400); transition: color 0.15s; }
+.nav-btn.active { color: var(--navy); }
+.nav-icon { font-size: 22px; }
+.nav-label { font-size: 10px; font-weight: 500; }
+
+/* ========== CONTENT AREA ========== */
+.content { flex: 1; overflow-y: auto; padding-bottom: 80px; }
+
+/* ========== LOGIN ========== */
+#loginScreen { background: var(--navy); justify-content: center; align-items: center; padding: 32px 24px; }
+.login-logo { text-align: center; margin-bottom: 40px; }
+.login-logo-icon { width: 72px; height: 72px; background: rgba(255,255,255,0.15); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 16px; }
+.login-logo h1 { color: #fff; font-size: 22px; font-weight: 700; }
+.login-logo p { color: rgba(255,255,255,0.6); font-size: 13px; margin-top: 4px; }
+
+.login-tabs { display: flex; background: rgba(255,255,255,0.1); border-radius: var(--radius-md); padding: 4px; margin-bottom: 24px; gap: 4px; }
+.login-tab { flex: 1; padding: 8px; border: none; border-radius: var(--radius-sm); background: none; color: rgba(255,255,255,0.6); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+.login-tab.active { background: var(--white); color: var(--navy); }
+
+.login-card { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: var(--radius-lg); padding: 24px; width: 100%; max-width: 340px; }
+.login-label { color: rgba(255,255,255,0.8); font-size: 13px; margin-bottom: 6px; display: block; }
+.login-input { width: 100%; padding: 12px 14px; border: 1px solid rgba(255,255,255,0.2); border-radius: var(--radius-sm); background: rgba(255,255,255,0.1); color: #fff; font-size: 15px; margin-bottom: 16px; outline: none; }
+.login-input::placeholder { color: rgba(255,255,255,0.4); }
+.login-input:focus { border-color: var(--accent); }
+.btn-login { width: 100%; padding: 14px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 4px; }
+.btn-login:active { opacity: 0.9; }
+.login-demo { color: rgba(255,255,255,0.5); font-size: 12px; text-align: center; margin-top: 16px; line-height: 1.6; }
+
+/* ========== DASHBOARD (教室長) ========== */
+.dashboard-header { background: var(--navy); padding: 20px 16px 32px; color: #fff; }
+.dashboard-greeting { font-size: 13px; color: rgba(255,255,255,0.7); }
+.dashboard-name { font-size: 20px; font-weight: 700; margin-top: 2px; }
+.dashboard-date { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px; margin-top: -20px; }
+.stat-card { background: var(--white); border-radius: var(--radius-md); padding: 16px; box-shadow: var(--shadow-sm); }
+.stat-label { font-size: 11px; color: var(--gray-600); font-weight: 500; margin-bottom: 6px; }
+.stat-value { font-size: 26px; font-weight: 700; color: var(--navy); line-height: 1; }
+.stat-sub { font-size: 11px; color: var(--gray-600); margin-top: 4px; }
+.stat-card.accent { background: var(--navy); }
+.stat-card.accent .stat-label { color: rgba(255,255,255,0.7); }
+.stat-card.accent .stat-value { color: #fff; }
+.stat-card.accent .stat-sub { color: rgba(255,255,255,0.5); }
+
+.progress-bar-wrap { height: 6px; background: var(--gray-200); border-radius: 99px; margin-top: 8px; overflow: hidden; }
+.progress-bar { height: 100%; background: var(--accent); border-radius: 99px; transition: width 0.4s; }
+
+/* ========== SECTION ========== */
+.section { padding: 0 16px; margin-bottom: 16px; }
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.section-title { font-size: 14px; font-weight: 600; color: var(--gray-800); }
+.section-link { font-size: 12px; color: var(--navy); font-weight: 500; background: none; border: none; cursor: pointer; }
+
+/* ========== CARDS ========== */
+.card { background: var(--white); border-radius: var(--radius-md); padding: 14px; margin-bottom: 10px; box-shadow: var(--shadow-sm); border: 1px solid var(--gray-200); }
+.card-row { display: flex; align-items: center; gap: 10px; }
+.card-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; flex-shrink: 0; }
+.card-body { flex: 1; min-width: 0; }
+.card-title { font-size: 14px; font-weight: 600; color: var(--gray-800); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-sub { font-size: 12px; color: var(--gray-600); margin-top: 2px; }
+.card-action { background: none; border: none; cursor: pointer; color: var(--gray-400); font-size: 18px; padding: 4px; }
+
+/* ========== BADGE / TAG ========== */
+.badge { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+.badge-green { background: var(--green-light); color: var(--green); }
+.badge-red { background: var(--red-light); color: var(--red); }
+.badge-amber { background: var(--amber-light); color: var(--amber); }
+.badge-navy { background: var(--navy-pale); color: var(--navy); }
+.badge-gray { background: var(--gray-200); color: var(--gray-600); }
+
+.subject-tag { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; }
+.subj-math { background: #e3f2fd; color: #1565c0; }
+.subj-eng { background: #f3e5f5; color: #6a1b9a; }
+.subj-jpn { background: #fff3e0; color: #e65100; }
+.subj-sci { background: #e8f5e9; color: #2e7d32; }
+.subj-soc { background: #fce4ec; color: #880e4f; }
+
+/* ========== HOMEWORK LIST (生徒) ========== */
+.hw-card { background: var(--white); border-radius: var(--radius-md); margin-bottom: 10px; box-shadow: var(--shadow-sm); border: 1px solid var(--gray-200); overflow: hidden; }
+.hw-card-header { padding: 14px 14px 10px; display: flex; align-items: flex-start; gap: 10px; }
+.hw-card-body { padding: 0 14px 14px; }
+.hw-title { font-size: 14px; font-weight: 600; color: var(--gray-800); margin-bottom: 4px; }
+.hw-deadline { font-size: 12px; color: var(--gray-600); display: flex; align-items: center; gap: 4px; }
+.hw-deadline.urgent { color: var(--red); font-weight: 600; }
+.hw-actions { display: flex; gap: 8px; margin-top: 10px; }
+
+/* ========== BUTTONS ========== */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 16px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; border: none; cursor: pointer; transition: opacity 0.15s, transform 0.1s; }
+.btn:active { opacity: 0.85; transform: scale(0.98); }
+.btn-primary { background: var(--navy); color: #fff; }
+.btn-success { background: var(--green); color: #fff; }
+.btn-danger { background: var(--red); color: #fff; }
+.btn-outline { background: #fff; color: var(--navy); border: 1.5px solid var(--navy); }
+.btn-ghost { background: var(--gray-100); color: var(--gray-800); }
+.btn-accent { background: var(--accent); color: #fff; }
+.btn-full { width: 100%; }
+.btn-sm { padding: 7px 12px; font-size: 12px; }
+
+/* ========== FAB ========== */
+.fab { position: fixed; right: 20px; bottom: 88px; width: 54px; height: 54px; border-radius: 50%; background: var(--accent); border: none; color: #fff; font-size: 26px; cursor: pointer; box-shadow: 0 4px 16px rgba(245,166,35,0.4); display: flex; align-items: center; justify-content: center; z-index: 90; transition: transform 0.2s; }
+.fab:active { transform: scale(0.94); }
+
+/* ========== FORMS ========== */
+.form-group { margin-bottom: 16px; }
+.form-label { font-size: 13px; font-weight: 600; color: var(--gray-800); margin-bottom: 6px; display: block; }
+.form-input, .form-select, .form-textarea { width: 100%; padding: 12px 14px; border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 15px; color: var(--gray-800); background: #fff; outline: none; font-family: inherit; }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--navy); }
+.form-textarea { resize: vertical; min-height: 100px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.subject-picker { display: flex; flex-wrap: wrap; gap: 8px; }
+.subject-option { padding: 7px 14px; border-radius: 99px; border: 1.5px solid var(--gray-200); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; background: #fff; }
+.subject-option.selected { border-color: var(--navy); background: var(--navy-pale); color: var(--navy); }
+
+.radio-group { display: flex; gap: 10px; }
+.radio-option { flex: 1; }
+.radio-option input { display: none; }
+.radio-option label { display: block; padding: 10px; text-align: center; border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 13px; cursor: pointer; background: #fff; transition: all 0.15s; }
+.radio-option input:checked + label { border-color: var(--navy); background: var(--navy-pale); color: var(--navy); font-weight: 600; }
+
+/* ========== UNDERSTAND PICKER ========== */
+.understand-picker { display: flex; gap: 8px; }
+.understand-btn { flex: 1; padding: 12px 6px; border-radius: var(--radius-sm); border: 1.5px solid var(--gray-200); font-size: 12px; font-weight: 600; cursor: pointer; text-align: center; background: #fff; transition: all 0.15s; }
+.understand-btn.u-good { }
+.understand-btn.u-good.sel { background: var(--green-light); border-color: var(--green); color: var(--green); }
+.understand-btn.u-unsure.sel { background: var(--amber-light); border-color: var(--amber); color: var(--amber); }
+.understand-btn.u-bad.sel { background: var(--red-light); border-color: var(--red); color: var(--red); }
+
+/* ========== UPLOAD AREA ========== */
+.upload-area { border: 2px dashed var(--gray-200); border-radius: var(--radius-md); padding: 32px 16px; text-align: center; cursor: pointer; transition: border-color 0.2s; position: relative; }
+.upload-area:hover, .upload-area.drag { border-color: var(--navy); background: var(--navy-pale); }
+.upload-icon { font-size: 36px; margin-bottom: 8px; }
+.upload-text { font-size: 14px; color: var(--gray-600); }
+.upload-sub { font-size: 12px; color: var(--gray-400); margin-top: 4px; }
+.upload-area input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.upload-preview { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.preview-img { width: 80px; height: 80px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--gray-200); }
+
+/* ========== LIST ITEMS ========== */
+.list-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--gray-100); background: var(--white); }
+.list-item:last-child { border-bottom: none; }
+.list-item-body { flex: 1; min-width: 0; }
+.list-item-title { font-size: 14px; font-weight: 600; color: var(--gray-800); }
+.list-item-sub { font-size: 12px; color: var(--gray-600); margin-top: 2px; }
+.list-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; }
+.list-icon-navy { background: var(--navy-pale); color: var(--navy); }
+.list-icon-green { background: var(--green-light); color: var(--green); }
+.list-icon-red { background: var(--red-light); color: var(--red); }
+.list-icon-amber { background: var(--amber-light); color: var(--amber); }
+
+/* ========== TABS ========== */
+.tab-bar { display: flex; background: var(--gray-100); border-bottom: 1px solid var(--gray-200); position: sticky; top: 56px; z-index: 50; }
+.tab-item { flex: 1; padding: 12px 4px; border: none; background: none; font-size: 13px; font-weight: 500; color: var(--gray-600); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; }
+.tab-item.active { color: var(--navy); border-bottom-color: var(--navy); background: #fff; font-weight: 600; }
+
+/* ========== MODAL ========== */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal { background: #fff; border-radius: var(--radius-lg) var(--radius-lg) 0 0; width: 100%; max-height: 90vh; overflow-y: auto; padding-bottom: 32px; transform: translateY(40px); transition: transform 0.25s; }
+.modal-overlay.open .modal { transform: translateY(0); }
+.modal-handle { width: 36px; height: 4px; background: var(--gray-200); border-radius: 99px; margin: 12px auto 16px; }
+.modal-title { font-size: 17px; font-weight: 700; color: var(--navy); padding: 0 20px 16px; border-bottom: 1px solid var(--gray-100); margin-bottom: 16px; }
+.modal-body { padding: 0 20px; }
+
+/* ========== PARENT VIEW ========== */
+.parent-stat-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 12px 16px; }
+.parent-stat { text-align: center; }
+.parent-stat-val { font-size: 22px; font-weight: 700; color: var(--navy); }
+.parent-stat-lbl { font-size: 10px; color: var(--gray-600); margin-top: 2px; }
+
+/* ========== COMMENT CARD ========== */
+.comment-card { background: var(--accent-light); border-left: 3px solid var(--accent); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; padding: 14px; }
+.comment-from { font-size: 11px; font-weight: 600; color: var(--amber); margin-bottom: 6px; }
+.comment-text { font-size: 14px; color: var(--gray-800); line-height: 1.6; }
+
+/* ========== EMPTY STATE ========== */
+.empty { text-align: center; padding: 40px 24px; }
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-title { font-size: 16px; font-weight: 600; color: var(--gray-600); }
+.empty-sub { font-size: 13px; color: var(--gray-400); margin-top: 6px; }
+
+/* ========== SUPABASE CONFIG ========== */
+.config-panel { background: var(--navy-pale); border: 1px solid var(--navy); border-radius: var(--radius-md); padding: 16px; margin: 16px; }
+.config-panel h3 { font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 12px; }
+
+/* ========== TOAST ========== */
+.toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--gray-800); color: #fff; padding: 10px 20px; border-radius: var(--radius-md); font-size: 14px; z-index: 300; opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ========== MISC ========== */
+.divider { height: 8px; background: var(--gray-100); }
+.spacer { height: 16px; }
+.text-center { text-align: center; }
+.mt8 { margin-top: 8px; }
+.mt12 { margin-top: 12px; }
+.mt16 { margin-top: 16px; }
+.rate-ring { width: 80px; height: 80px; }
+</style>
+</head>
+<body>
+
+<!-- ========== TOAST ========== -->
+<div class="toast" id="toast"></div>
+
+<!-- ========== LOGIN SCREEN ========== -->
+<div class="screen active" id="loginScreen">
+  <div class="login-logo">
+    <div class="login-logo-icon">📚</div>
+    <h1>まなびサポート</h1>
+    <p>個別指導塾 宿題管理システム</p>
+  </div>
+
+  <div class="login-tabs">
+    <button class="login-tab active" onclick="setLoginRole('admin')">教室長</button>
+    <button class="login-tab" onclick="setLoginRole('student')">生徒</button>
+    <button class="login-tab" onclick="setLoginRole('parent')">保護者</button>
+  </div>
+
+  <div class="login-card" id="loginCard">
+    <div id="loginFields"></div>
+    <button class="btn-login" onclick="doLogin()">ログイン</button>
+    <p class="login-demo">
+      【デモ用】<br>
+      教室長: ID=admin / PW=1234<br>
+      生徒: ID=S001 〜 S003<br>
+      保護者: 生徒IDでログイン
+    </p>
+  </div>
+</div>
+
+<!-- ========== ADMIN: DASHBOARD ========== -->
+<div class="screen" id="adminDashboard">
+  <div class="dashboard-header">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+      <div>
+        <div class="dashboard-greeting">おはようございます</div>
+        <div class="dashboard-name">田中教室長</div>
+        <div class="dashboard-date" id="todayDate"></div>
+      </div>
+      <button onclick="logout()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;padding:8px 12px;border-radius:var(--radius-sm);font-size:12px;cursor:pointer;">ログアウト</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="stats-grid">
+      <div class="stat-card accent">
+        <div class="stat-label">在籍生徒数</div>
+        <div class="stat-value" id="totalStudents">3</div>
+        <div class="stat-sub">名</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">今日の提出</div>
+        <div class="stat-value" id="todaySubmit" style="color:var(--green)">2</div>
+        <div class="stat-sub">/ 3件</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">未提出</div>
+        <div class="stat-value" id="todayUnsubmit" style="color:var(--red)">1</div>
+        <div class="stat-sub">名</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">提出率</div>
+        <div class="stat-value" id="submitRate" style="color:var(--navy)">67%</div>
+        <div class="progress-bar-wrap mt8">
+          <div class="progress-bar" id="submitRateBar" style="width:67%"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">⚠️ 未提出者</div>
+        <button class="section-link" onclick="adminTab('submit')">全員表示 →</button>
+      </div>
+      <div id="unsubmittedList" class="card" style="padding:0;overflow:hidden;"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">📋 最新宿題</div>
+        <button class="section-link" onclick="adminTab('homework')">すべて →</button>
+      </div>
+      <div id="recentHomeworkList"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">📊 Supabase 設定</div>
+      </div>
+      <div class="config-panel">
+        <h3>🔌 データベース接続</h3>
+        <div class="form-group">
+          <label class="form-label">Supabase URL</label>
+          <input class="form-input" id="cfgUrl" placeholder="https://xxxx.supabase.co" oninput="saveConfig()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Anon Key</label>
+          <input class="form-input" id="cfgKey" placeholder="eyJhbGciOiJIUzI1NiIs..." type="password" oninput="saveConfig()">
+        </div>
+        <div id="cfgStatus" style="font-size:12px;color:var(--gray-600);margin-top:4px;">⚙️ 接続情報を入力するとリアルタイムで保存されます</div>
+        <div style="margin-top:12px;padding:12px;background:#fff;border-radius:var(--radius-sm);font-size:11px;color:var(--gray-600);line-height:1.7;">
+          <strong>Supabaseで必要なテーブル：</strong><br>
+          students, homeworks, submissions, study_logs, comments, questions
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" onclick="adminTab('dash')"><span class="nav-icon">🏠</span><span class="nav-label">ホーム</span></button>
+    <button class="nav-btn" onclick="adminTab('homework')"><span class="nav-icon">📝</span><span class="nav-label">宿題</span></button>
+    <button class="nav-btn" onclick="adminTab('submit')"><span class="nav-icon">📊</span><span class="nav-label">提出</span></button>
+    <button class="nav-btn" onclick="adminTab('students')"><span class="nav-icon">👥</span><span class="nav-label">生徒</span></button>
+  </nav>
+</div>
+
+<!-- ========== ADMIN: HOMEWORK LIST ========== -->
+<div class="screen" id="adminHomework">
+  <div class="topbar">
+    <button class="topbar-back" onclick="adminTab('dash')">←</button>
+    <div class="topbar-title">宿題管理</div>
+    <button class="topbar-action" onclick="openHomeworkModal()">＋ 作成</button>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-item active" onclick="hwFilter('all',this)">すべて</button>
+    <button class="tab-item" onclick="hwFilter('math',this)">数学</button>
+    <button class="tab-item" onclick="hwFilter('eng',this)">英語</button>
+    <button class="tab-item" onclick="hwFilter('jpn',this)">国語</button>
+  </div>
+  <div class="content" id="adminHwList"></div>
+</div>
+
+<!-- ========== ADMIN: SUBMISSION MANAGEMENT ========== -->
+<div class="screen" id="adminSubmit">
+  <div class="topbar">
+    <button class="topbar-back" onclick="adminTab('dash')">←</button>
+    <div class="topbar-title">提出管理</div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-item active" onclick="submitTab('submitted',this)">提出済み</button>
+    <button class="tab-item" onclick="submitTab('unsubmitted',this)">未提出</button>
+    <button class="tab-item" onclick="submitTab('history',this)">履歴</button>
+  </div>
+  <div class="content" id="adminSubmitContent"></div>
+</div>
+
+<!-- ========== ADMIN: STUDENTS ========== -->
+<div class="screen" id="adminStudents">
+  <div class="topbar">
+    <button class="topbar-back" onclick="adminTab('dash')">←</button>
+    <div class="topbar-title">生徒管理</div>
+    <button class="topbar-action" onclick="openStudentModal()">＋ 追加</button>
+  </div>
+  <div class="content" id="adminStudentList"></div>
+</div>
+
+<!-- ========== STUDENT: HOME ========== -->
+<div class="screen" id="studentHome">
+  <div class="topbar">
+    <div class="topbar-title" id="studentName">宿題一覧</div>
+    <button onclick="logout()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;padding:6px 10px;border-radius:var(--radius-sm);font-size:12px;cursor:pointer;">ログアウト</button>
+  </div>
+  <div class="content" id="studentHwList"></div>
+  <nav class="bottom-nav">
+    <button class="nav-btn active" onclick="studentTab('home')"><span class="nav-icon">📚</span><span class="nav-label">宿題</span></button>
+    <button class="nav-btn" onclick="studentTab('log')"><span class="nav-icon">⏱️</span><span class="nav-label">学習記録</span></button>
+    <button class="nav-btn" onclick="studentTab('question')"><span class="nav-icon">❓</span><span class="nav-label">質問</span></button>
+  </nav>
+</div>
+
+<!-- ========== STUDENT: LOG ========== -->
+<div class="screen" id="studentLog">
+  <div class="topbar">
+    <button class="topbar-back" onclick="studentTab('home')">←</button>
+    <div class="topbar-title">学習記録</div>
+  </div>
+  <div class="content">
+    <div style="padding:16px;">
+      <div class="card">
+        <div class="form-group">
+          <label class="form-label">📅 日付</label>
+          <input type="date" class="form-input" id="logDate">
+        </div>
+        <div class="form-group">
+          <label class="form-label">⏱️ 勉強時間（分）</label>
+          <input type="number" class="form-input" id="logMinutes" placeholder="60" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">📚 教科</label>
+          <select class="form-select" id="logSubject">
+            <option value="">選択してください</option>
+            <option value="math">数学</option>
+            <option value="eng">英語</option>
+            <option value="jpn">国語</option>
+            <option value="sci">理科</option>
+            <option value="soc">社会</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">💡 理解度</label>
+          <div class="understand-picker" id="understandPicker">
+            <button class="understand-btn u-good" onclick="setUnderstand('good',this)">😊<br>よくわかった</button>
+            <button class="understand-btn u-unsure" onclick="setUnderstand('unsure',this)">😐<br>少し不安</button>
+            <button class="understand-btn u-bad" onclick="setUnderstand('bad',this)">😕<br>わからない</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">📝 メモ（任意）</label>
+          <textarea class="form-textarea" id="logMemo" placeholder="今日学んだことや気づきを書こう" style="min-height:80px;"></textarea>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="saveLog()">📩 記録を保存</button>
+      </div>
+
+      <div class="section-header mt16">
+        <div class="section-title">📊 最近の学習記録</div>
+      </div>
+      <div id="logHistory"></div>
+    </div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="studentTab('home')"><span class="nav-icon">📚</span><span class="nav-label">宿題</span></button>
+    <button class="nav-btn active" onclick="studentTab('log')"><span class="nav-icon">⏱️</span><span class="nav-label">学習記録</span></button>
+    <button class="nav-btn" onclick="studentTab('question')"><span class="nav-icon">❓</span><span class="nav-label">質問</span></button>
+  </nav>
+</div>
+
+<!-- ========== STUDENT: QUESTION ========== -->
+<div class="screen" id="studentQuestion">
+  <div class="topbar">
+    <button class="topbar-back" onclick="studentTab('home')">←</button>
+    <div class="topbar-title">質問する</div>
+  </div>
+  <div class="content">
+    <div style="padding:16px;">
+      <div class="card">
+        <div class="form-group">
+          <label class="form-label">📚 教科</label>
+          <select class="form-select" id="qSubject">
+            <option value="">選択してください</option>
+            <option value="math">数学</option>
+            <option value="eng">英語</option>
+            <option value="jpn">国語</option>
+            <option value="sci">理科</option>
+            <option value="soc">社会</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">❓ 質問内容</label>
+          <textarea class="form-textarea" id="qContent" placeholder="わからなかった問題や内容を書いてください"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">📷 写真（任意）</label>
+          <div class="upload-area" id="qUploadArea" onclick="triggerQUpload()">
+            <div class="upload-icon">📸</div>
+            <div class="upload-text">問題をカメラで撮影</div>
+            <div class="upload-sub">タップして撮影・選択</div>
+            <input type="file" accept="image/*" capture="environment" id="qFileInput" onchange="previewQPhoto(this)" style="display:none;">
+          </div>
+          <div class="upload-preview" id="qPreview"></div>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="sendQuestion()">✉️ 質問を送る</button>
+      </div>
+
+      <div class="section-header mt16">
+        <div class="section-title">📬 送った質問</div>
+      </div>
+      <div id="questionList"></div>
+    </div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="studentTab('home')"><span class="nav-icon">📚</span><span class="nav-label">宿題</span></button>
+    <button class="nav-btn" onclick="studentTab('log')"><span class="nav-icon">⏱️</span><span class="nav-label">学習記録</span></button>
+    <button class="nav-btn active" onclick="studentTab('question')"><span class="nav-icon">❓</span><span class="nav-label">質問</span></button>
+  </nav>
+</div>
+
+<!-- ========== PARENT VIEW ========== -->
+<div class="screen" id="parentView">
+  <div class="topbar">
+    <div class="topbar-title" id="parentChildName">保護者画面</div>
+    <button onclick="logout()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;padding:6px 10px;border-radius:var(--radius-sm);font-size:12px;cursor:pointer;">ログアウト</button>
+  </div>
+  <div class="content">
+    <div style="padding:16px 0 0;">
+      <div class="parent-stat-row">
+        <div class="parent-stat">
+          <div class="parent-stat-val" id="parentRate" style="color:var(--navy)">67%</div>
+          <div class="parent-stat-lbl">提出率</div>
+        </div>
+        <div class="parent-stat">
+          <div class="parent-stat-val" id="parentStudyMin" style="color:var(--green)">45</div>
+          <div class="parent-stat-lbl">今週学習(分)</div>
+        </div>
+        <div class="parent-stat">
+          <div class="parent-stat-val" id="parentSubmit" style="color:var(--amber)">2</div>
+          <div class="parent-stat-lbl">提出済み</div>
+        </div>
+      </div>
+      <div class="progress-bar-wrap" style="margin:0 16px 16px;">
+        <div class="progress-bar" id="parentRateBar" style="width:67%"></div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section mt12">
+      <div class="section-title" style="margin-bottom:10px;">💬 教室長からのコメント</div>
+      <div id="parentComment">
+        <div class="comment-card">
+          <div class="comment-from">📝 田中教室長より</div>
+          <div class="comment-text">最近、数学の取り組みが向上しています。引き続き毎日の計算練習を続けていただけると、さらに成績アップが期待できます。次回の面談でも詳しくお話ししましょう。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider" style="margin:16px 0;"></div>
+
+    <div class="section">
+      <div class="section-title" style="margin-bottom:10px;">📋 宿題提出状況</div>
+      <div id="parentHwStatus"></div>
+    </div>
+
+    <div class="divider" style="margin:16px 0;"></div>
+
+    <div class="section">
+      <div class="section-title" style="margin-bottom:10px;">⏱️ 学習記録</div>
+      <div id="parentLogList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SUBMIT HOMEWORK MODAL ========== -->
+<div class="modal-overlay" id="submitModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="submitModalTitle">宿題を提出する</div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">📷 ワークを撮影してアップロード</label>
+        <div class="upload-area" id="hwUploadArea" onclick="triggerHwUpload()">
+          <div class="upload-icon">📷</div>
+          <div class="upload-text">カメラで撮影 / 写真を選択</div>
+          <div class="upload-sub">ワーク・ノートの写真を添付してください</div>
+          <input type="file" accept="image/*" capture="environment" id="hwFileInput" onchange="previewHwPhoto(this)" style="display:none;">
+        </div>
+        <div class="upload-preview" id="hwPreview"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">💡 理解度</label>
+        <div class="understand-picker" id="hwUnderstandPicker">
+          <button class="understand-btn u-good" onclick="setHwUnderstand('good',this)">😊<br>よくわかった</button>
+          <button class="understand-btn u-unsure" onclick="setHwUnderstand('unsure',this)">😐<br>少し不安</button>
+          <button class="understand-btn u-bad" onclick="setHwUnderstand('bad',this)">😕<br>わからない</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">⏱️ 取り組み時間（分）</label>
+        <input type="number" class="form-input" id="hwStudyTime" placeholder="30" min="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">💬 コメント（任意）</label>
+        <textarea class="form-textarea" id="hwComment" placeholder="気づきや感想を書こう" style="min-height:70px;"></textarea>
+      </div>
+      <button class="btn btn-success btn-full" onclick="submitHomework()">✅ 提出する</button>
+      <div style="height:12px;"></div>
+      <button class="btn btn-ghost btn-full" onclick="closeModal('submitModal')">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== CREATE HOMEWORK MODAL ========== -->
+<div class="modal-overlay" id="hwModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">宿題を作成</div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">📚 教科</label>
+        <div class="subject-picker" id="hwSubjectPicker">
+          <button class="subject-option" onclick="selectSubject('math',this)">数学</button>
+          <button class="subject-option" onclick="selectSubject('eng',this)">英語</button>
+          <button class="subject-option" onclick="selectSubject('jpn',this)">国語</button>
+          <button class="subject-option" onclick="selectSubject('sci',this)">理科</button>
+          <button class="subject-option" onclick="selectSubject('soc',this)">社会</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">📝 宿題内容</label>
+        <textarea class="form-textarea" id="hwContent" placeholder="例: 教科書 P.42〜45 問1〜10"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">📅 提出期限</label>
+        <input type="date" class="form-input" id="hwDeadline">
+      </div>
+      <div class="form-group">
+        <label class="form-label">👤 配信対象</label>
+        <div class="radio-group">
+          <div class="radio-option">
+            <input type="radio" name="dist" id="dist-all" value="all" checked>
+            <label for="dist-all">全員</label>
+          </div>
+          <div class="radio-option">
+            <input type="radio" name="dist" id="dist-ind" value="individual">
+            <label for="dist-ind">個別</label>
+          </div>
+        </div>
+      </div>
+      <div class="form-group" id="studentSelectWrap" style="display:none;">
+        <label class="form-label">生徒を選択</label>
+        <div id="studentCheckboxes"></div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="createHomework()">📤 配信する</button>
+      <div style="height:12px;"></div>
+      <button class="btn btn-ghost btn-full" onclick="closeModal('hwModal')">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== ADD STUDENT MODAL ========== -->
+<div class="modal-overlay" id="studentModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">生徒を追加</div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">氏名</label>
+        <input class="form-input" id="sName" placeholder="山田 太郎">
+      </div>
+      <div class="form-group">
+        <label class="form-label">学年</label>
+        <select class="form-select" id="sGrade">
+          <option value="中1">中学1年</option>
+          <option value="中2">中学2年</option>
+          <option value="中3">中学3年</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">生徒ID（自動発行）</label>
+        <input class="form-input" id="sId" readonly style="background:var(--gray-100);">
+      </div>
+      <div class="form-group">
+        <label class="form-label">保護者メモ</label>
+        <textarea class="form-textarea" id="sNote" placeholder="連絡事項など" style="min-height:70px;"></textarea>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="addStudent()">✅ 登録する</button>
+      <div style="height:12px;"></div>
+      <button class="btn btn-ghost btn-full" onclick="closeModal('studentModal')">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== COMMENT MODAL ========== -->
+<div class="modal-overlay" id="commentModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="commentModalTitle">保護者コメント</div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">💬 保護者向けコメント</label>
+        <textarea class="form-textarea" id="commentText" placeholder="学習状況や連絡事項を入力してください"></textarea>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="saveComment()">💾 保存する</button>
+      <div style="height:12px;"></div>
+      <button class="btn btn-ghost btn-full" onclick="closeModal('commentModal')">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== STATE ==========
+let currentRole = 'admin';
+let currentUser = null;
+let selectedSubject = '';
+let selectedUnderstand = '';
+let hwUnderstand = '';
+let currentHomeworkId = null;
+let editStudentId = null;
+let commentTargetId = null;
+
+const SUBJECTS = {
+  math: { label: '数学', cls: 'subj-math' },
+  eng:  { label: '英語', cls: 'subj-eng' },
+  jpn:  { label: '国語', cls: 'subj-jpn' },
+  sci:  { label: '理科', cls: 'subj-sci' },
+  soc:  { label: '社会', cls: 'subj-soc' },
+};
+
+// ========== DEMO DATA ==========
+let db = {
+  students: [
+    { id:'S001', name:'山田 太郎', grade:'中2', note:'', avatar:'山太', color:'#e3f2fd', colorText:'#1565c0' },
+    { id:'S002', name:'佐藤 花子', grade:'中1', note:'', avatar:'佐花', color:'#f3e5f5', colorText:'#6a1b9a' },
+    { id:'S003', name:'鈴木 健太', grade:'中3', note:'', avatar:'鈴健', color:'#e8f5e9', colorText:'#2e7d32' },
+  ],
+  homeworks: [
+    { id:'H001', subject:'math', content:'教科書 P.42〜45 問1〜10（一次方程式）', deadline:'2025-06-20', target:'all', created:'2025-06-15' },
+    { id:'H002', subject:'eng', content:'単語帳 Unit 3 全単語を3回ずつ書く', deadline:'2025-06-18', target:'all', created:'2025-06-15' },
+    { id:'H003', subject:'jpn', content:'漢字ドリル P.20〜22 書き取り', deadline:'2025-06-22', target:'S001', created:'2025-06-14' },
+    { id:'H004', subject:'sci', content:'理科ノート P.30 問題を解く', deadline:'2025-06-25', target:'all', created:'2025-06-13' },
+  ],
+  submissions: [
+    { id:'SUB001', hwId:'H001', studentId:'S001', date:'2025-06-16', understand:'good', studyMin:45, comment:'できました', photo:null },
+    { id:'SUB002', hwId:'H002', studentId:'S002', date:'2025-06-15', understand:'unsure', studyMin:30, comment:'', photo:null },
+  ],
+  studyLogs: [
+    { id:'L001', studentId:'S001', date:'2025-06-16', subject:'math', minutes:45, understand:'good', memo:'方程式の解き方がわかってきた' },
+    { id:'L002', studentId:'S001', date:'2025-06-15', subject:'eng', minutes:30, understand:'unsure', memo:'単語が覚えられない' },
+    { id:'L003', studentId:'S002', date:'2025-06-16', subject:'eng', minutes:20, understand:'good', memo:'' },
+  ],
+  comments: {
+    'S001': '最近、数学の取り組みが向上しています。引き続き毎日の計算練習を続けていただけると、さらに成績アップが期待できます。次回の面談でも詳しくお話ししましょう。',
+    'S002': '英語の単語暗記を毎日少しずつ継続していただいています。授業中の理解度も高いです。',
+    'S003': '受験まで半年を切りました。特に数学の応用問題に力を入れてほしいです。',
+  },
+  questions: [
+    { id:'Q001', studentId:'S001', subject:'math', content:'P.43の問5が解けません。途中式のどこが間違っているかわかりません。', date:'2025-06-16', photo:null },
+  ],
+};
+
+// ========== SUPABASE ==========
+let supabaseUrl = localStorage.getItem('sb_url') || '';
+let supabaseKey = localStorage.getItem('sb_key') || '';
+let sbClient = null;
+
+function saveConfig() {
+  supabaseUrl = document.getElementById('cfgUrl').value;
+  supabaseKey = document.getElementById('cfgKey').value;
+  localStorage.setItem('sb_url', supabaseUrl);
+  localStorage.setItem('sb_key', supabaseKey);
+  document.getElementById('cfgStatus').textContent = '✅ 保存されました（次回ログイン時に接続されます）';
+}
+
+async function sbFetch(path, opts={}) {
+  if (!supabaseUrl || !supabaseKey) return null;
+  try {
+    const res = await fetch(`${supabaseUrl}/rest/v1/${path}`, {
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal',
+      }, ...opts
+    });
+    if (!res.ok) return null;
+    const txt = await res.text();
+    return txt ? JSON.parse(txt) : true;
+  } catch(e) { return null; }
+}
+
+// ========== LOGIN ==========
+let loginRole = 'admin';
+function setLoginRole(role) {
+  loginRole = role;
+  document.querySelectorAll('.login-tab').forEach((t,i)=>{
+    t.classList.toggle('active', ['admin','student','parent'][i]===role);
+  });
+  const f = document.getElementById('loginFields');
+  if (role==='admin') {
+    f.innerHTML = `<label class="login-label">管理者ID</label><input class="login-input" id="li1" placeholder="admin" value="admin"><label class="login-label">パスワード</label><input class="login-input" id="li2" type="password" placeholder="1234" value="1234">`;
+  } else if (role==='student') {
+    f.innerHTML = `<label class="login-label">生徒ID</label><input class="login-input" id="li1" placeholder="S001">`;
+  } else {
+    f.innerHTML = `<label class="login-label">お子様の生徒ID</label><input class="login-input" id="li1" placeholder="S001">`;
+  }
+}
+
+function doLogin() {
+  const id = document.getElementById('li1').value.trim();
+  const pw = document.getElementById('li2') ? document.getElementById('li2').value.trim() : '';
+  if (loginRole==='admin') {
+    if (id==='admin' && pw==='1234') {
+      currentRole='admin'; currentUser={id:'admin',name:'田中'};
+      showScreen('adminDashboard'); renderAdmin();
+    } else { showToast('IDまたはパスワードが違います'); }
+  } else if (loginRole==='student') {
+    const st = db.students.find(s=>s.id===id);
+    if (st) {
+      currentRole='student'; currentUser=st;
+      document.getElementById('studentName').textContent = st.name+'さんの宿題';
+      showScreen('studentHome'); renderStudentHome();
+    } else { showToast('生徒IDが見つかりません'); }
+  } else {
+    const st = db.students.find(s=>s.id===id);
+    if (st) {
+      currentRole='parent'; currentUser=st;
+      document.getElementById('parentChildName').textContent = st.name+'さんの学習状況';
+      showScreen('parentView'); renderParent();
+    } else { showToast('生徒IDが見つかりません'); }
+  }
+}
+
+function logout() {
+  currentRole=null; currentUser=null;
+  showScreen('loginScreen');
+  setLoginRole('admin');
+}
+
+// ========== SCREENS ==========
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ========== ADMIN ==========
+function adminTab(tab) {
+  const navBtns = document.querySelectorAll('#adminDashboard .nav-btn, #adminHomework .nav-btn, #adminSubmit .nav-btn, #adminStudents .nav-btn');
+  if (tab==='dash') {
+    showScreen('adminDashboard'); renderAdmin();
+    document.querySelectorAll('#adminDashboard .nav-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
+  } else if (tab==='homework') {
+    showScreen('adminHomework'); renderAdminHw('all');
+    document.querySelectorAll('#adminDashboard .nav-btn').forEach((b,i)=>b.classList.toggle('active',i===1));
+  } else if (tab==='submit') {
+    showScreen('adminSubmit'); submitTab('submitted');
+    document.querySelectorAll('#adminDashboard .nav-btn').forEach((b,i)=>b.classList.toggle('active',i===2));
+  } else if (tab==='students') {
+    showScreen('adminStudents'); renderAdminStudents();
+    document.querySelectorAll('#adminDashboard .nav-btn').forEach((b,i)=>b.classList.toggle('active',i===3));
+  }
+}
+
+function renderAdmin() {
+  const today = new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+  document.getElementById('todayDate').textContent = today;
+  document.getElementById('totalStudents').textContent = db.students.length;
+  const todaySubs = db.submissions.filter(s=>s.date===todayStr());
+  const todayHws = db.homeworks.filter(h=>h.target==='all'||db.students.some(s=>h.target===s.id));
+  const rate = db.students.length ? Math.round(todaySubs.length/db.students.length*100) : 0;
+  document.getElementById('todaySubmit').textContent = todaySubs.length;
+  document.getElementById('todayUnsubmit').textContent = db.students.length - new Set(todaySubs.map(s=>s.studentId)).size;
+  document.getElementById('submitRate').textContent = rate+'%';
+  document.getElementById('submitRateBar').style.width = rate+'%';
+
+  const submitted = new Set(db.submissions.map(s=>s.studentId));
+  const unsub = db.students.filter(s=>!submitted.has(s.id));
+  const ul = document.getElementById('unsubmittedList');
+  if (unsub.length===0) {
+    ul.innerHTML = '<div style="padding:16px;text-align:center;color:var(--green);font-weight:600;">✅ 全員提出済み</div>';
+  } else {
+    ul.innerHTML = unsub.map(s=>`
+      <div class="list-item">
+        <div class="list-icon" style="background:${s.color};color:${s.colorText};">${s.avatar}</div>
+        <div class="list-item-body">
+          <div class="list-item-title">${s.name}</div>
+          <div class="list-item-sub">${s.grade}</div>
+        </div>
+        <span class="badge badge-red">未提出</span>
+      </div>`).join('');
+  }
+
+  const rhl = document.getElementById('recentHomeworkList');
+  rhl.innerHTML = db.homeworks.slice(-3).reverse().map(h=>hwCardAdmin(h)).join('');
+
+  if (document.getElementById('cfgUrl')) document.getElementById('cfgUrl').value = supabaseUrl;
+  if (document.getElementById('cfgKey')) document.getElementById('cfgKey').value = supabaseKey;
+}
+
+function hwCardAdmin(h) {
+  const sub = db.submissions.filter(s=>s.hwId===h.id);
+  const subCount = sub.length;
+  const total = h.target==='all' ? db.students.length : 1;
+  const rate = total ? Math.round(subCount/total*100) : 0;
+  const deadline = new Date(h.deadline);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const overdue = deadline < today;
+  const subj = SUBJECTS[h.subject]||{label:h.subject,cls:''};
+  return `<div class="card">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <span class="subject-tag ${subj.cls}">${subj.label}</span>
+      ${overdue?'<span class="badge badge-red">期限切れ</span>':''}
+      <span style="margin-left:auto;font-size:12px;color:var(--gray-600);">${h.deadline}</span>
+    </div>
+    <div style="font-size:14px;font-weight:600;color:var(--gray-800);margin-bottom:8px;">${h.content}</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="flex:1;background:var(--gray-100);border-radius:99px;height:6px;overflow:hidden;">
+        <div style="height:100%;background:${rate===100?'var(--green)':'var(--accent)'};width:${rate}%;border-radius:99px;transition:width 0.4s;"></div>
+      </div>
+      <span style="font-size:12px;font-weight:600;color:var(--gray-600);">${subCount}/${total}件 (${rate}%)</span>
+    </div>
+  </div>`;
+}
+
+function renderAdminHw(filter) {
+  let hws = filter==='all' ? db.homeworks : db.homeworks.filter(h=>h.subject===filter);
+  const el = document.getElementById('adminHwList');
+  if (!hws.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📝</div><div class="empty-title">宿題がありません</div><div class="empty-sub">＋ 作成 から追加してください</div></div>';
+    return;
+  }
+  el.innerHTML = '<div style="padding:12px 16px 0;">' + hws.map(h=>hwCardAdmin(h)).join('') + '</div>';
+}
+
+function hwFilter(filter, btn) {
+  document.querySelectorAll('.tab-bar .tab-item').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderAdminHw(filter==='all'?'all':filter);
+}
+
+function submitTab(tab, btn) {
+  if(btn){document.querySelectorAll('#adminSubmit .tab-item').forEach(t=>t.classList.remove('active'));btn.classList.add('active');}
+  const el = document.getElementById('adminSubmitContent');
+  if (tab==='submitted') {
+    if (!db.submissions.length) { el.innerHTML='<div class="empty"><div class="empty-icon">📭</div><div class="empty-title">提出がまだありません</div></div>'; return; }
+    el.innerHTML = '<div style="background:#fff;border-radius:var(--radius-md);margin:16px;overflow:hidden;box-shadow:var(--shadow-sm);">' +
+      db.submissions.map(sub=>{
+        const st = db.students.find(s=>s.id===sub.studentId)||{name:'?',avatar:'?',color:'#eee',colorText:'#333'};
+        const hw = db.homeworks.find(h=>h.id===sub.hwId)||{subject:'',content:'?'};
+        const subj = SUBJECTS[hw.subject]||{label:'?',cls:''};
+        const uMap={'good':'😊 よくわかった','unsure':'😐 少し不安','bad':'😕 わからない'};
+        return `<div class="list-item">
+          <div class="list-icon" style="background:${st.color};color:${st.colorText};">${st.avatar}</div>
+          <div class="list-item-body">
+            <div class="list-item-title">${st.name}</div>
+            <div class="list-item-sub"><span class="subject-tag ${subj.cls}" style="font-size:10px;padding:2px 6px;">${subj.label}</span> ${sub.date} · ${uMap[sub.understand]||''}</div>
+          </div>
+          <span class="badge badge-green">提出済</span>
+        </div>`;
+      }).join('') + '</div>';
+  } else if (tab==='unsubmitted') {
+    const submitted = new Set(db.submissions.map(s=>s.studentId));
+    const unsub = db.students.filter(s=>!submitted.has(s.id));
+    if (!unsub.length) { el.innerHTML='<div class="empty"><div class="empty-icon">🎉</div><div class="empty-title">全員提出済みです！</div></div>'; return; }
+    el.innerHTML = '<div style="background:#fff;border-radius:var(--radius-md);margin:16px;overflow:hidden;box-shadow:var(--shadow-sm);">' +
+      unsub.map(s=>`<div class="list-item">
+        <div class="list-icon" style="background:${s.color};color:${s.colorText};">${s.avatar}</div>
+        <div class="list-item-body">
+          <div class="list-item-title">${s.name}</div>
+          <div class="list-item-sub">${s.grade}</div>
+        </div>
+        <span class="badge badge-red">未提出</span>
+      </div>`).join('') + '</div>';
+  } else {
+    el.innerHTML = '<div style="padding:16px;">' + db.students.map(st=>{
+      const logs = db.studyLogs.filter(l=>l.studentId===st.id);
+      const totalMin = logs.reduce((a,b)=>a+b.minutes,0);
+      const subs = db.submissions.filter(s=>s.studentId===st.id);
+      return `<div class="card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div class="card-avatar" style="background:${st.color};color:${st.colorText};">${st.avatar}</div>
+          <div><div style="font-size:15px;font-weight:600;">${st.name}</div><div style="font-size:12px;color:var(--gray-600);">${st.grade}</div></div>
+          <button class="btn btn-sm btn-outline" style="margin-left:auto;" onclick="openCommentModal('${st.id}')">💬 コメント</button>
+        </div>
+        <div style="display:flex;gap:16px;">
+          <div><div style="font-size:11px;color:var(--gray-600);">提出数</div><div style="font-size:20px;font-weight:700;color:var(--navy);">${subs.length}件</div></div>
+          <div><div style="font-size:11px;color:var(--gray-600);">学習時間</div><div style="font-size:20px;font-weight:700;color:var(--green);">${totalMin}分</div></div>
+        </div>
+      </div>`;
+    }).join('') + '</div>';
+  }
+}
+
+function renderAdminStudents() {
+  const el = document.getElementById('adminStudentList');
+  el.innerHTML = '<div style="padding:16px;">' + db.students.map(s=>`
+    <div class="card">
+      <div class="card-row">
+        <div class="card-avatar" style="background:${s.color};color:${s.colorText};width:44px;height:44px;font-size:14px;">${s.avatar}</div>
+        <div class="card-body">
+          <div class="card-title">${s.name}</div>
+          <div class="card-sub">${s.grade} · ID: ${s.id}</div>
+        </div>
+        <button class="btn btn-sm btn-ghost" onclick="deleteStudent('${s.id}')">削除</button>
+      </div>
+    </div>`).join('') + '</div>';
+}
+
+// ========== HOMEWORK MODAL ==========
+function openHomeworkModal() {
+  selectedSubject='';
+  document.getElementById('hwContent').value='';
+  document.getElementById('hwDeadline').value='';
+  document.querySelectorAll('#hwSubjectPicker .subject-option').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('input[name=dist]')[0].checked=true;
+  document.getElementById('studentSelectWrap').style.display='none';
+  openModal('hwModal');
+}
+
+function selectSubject(s, btn) {
+  selectedSubject=s;
+  document.querySelectorAll('#hwSubjectPicker .subject-option').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+document.querySelectorAll('input[name=dist]').forEach(r=>r.addEventListener('change',function(){
+  document.getElementById('studentSelectWrap').style.display=this.value==='individual'?'block':'none';
+  if (this.value==='individual') {
+    document.getElementById('studentCheckboxes').innerHTML = db.students.map(s=>
+      `<label style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--gray-100);">
+        <input type="checkbox" value="${s.id}"> ${s.name}（${s.grade}）
+      </label>`).join('');
+  }
+}));
+
+function createHomework() {
+  if (!selectedSubject) { showToast('教科を選択してください'); return; }
+  const content = document.getElementById('hwContent').value.trim();
+  if (!content) { showToast('宿題内容を入力してください'); return; }
+  const deadline = document.getElementById('hwDeadline').value;
+  if (!deadline) { showToast('提出期限を設定してください'); return; }
+  const dist = document.querySelector('input[name=dist]:checked').value;
+  let target = 'all';
+  if (dist==='individual') {
+    const checked = [...document.querySelectorAll('#studentCheckboxes input:checked')].map(c=>c.value);
+    if (!checked.length) { showToast('生徒を選択してください'); return; }
+    target = checked[0]; // simplified
+  }
+  const hw = { id:'H'+Date.now(), subject:selectedSubject, content, deadline, target, created:todayStr() };
+  db.homeworks.push(hw);
+  closeModal('hwModal');
+  showToast('宿題を配信しました！');
+  renderAdminHw('all');
+}
+
+// ========== STUDENT MODAL ==========
+function openStudentModal() {
+  document.getElementById('sName').value='';
+  document.getElementById('sNote').value='';
+  document.getElementById('sGrade').value='中1';
+  document.getElementById('sId').value='S'+String(100+db.students.length+1).substring(1);
+  openModal('studentModal');
+}
+
+function addStudent() {
+  const name = document.getElementById('sName').value.trim();
+  if (!name) { showToast('氏名を入力してください'); return; }
+  const id = document.getElementById('sId').value;
+  const grade = document.getElementById('sGrade').value;
+  const note = document.getElementById('sNote').value;
+  const colors = [['#e3f2fd','#1565c0'],['#f3e5f5','#6a1b9a'],['#e8f5e9','#2e7d32'],['#fff3e0','#e65100'],['#fce4ec','#880e4f']];
+  const c = colors[db.students.length % colors.length];
+  const av = name.replace(' ','').slice(0,2);
+  db.students.push({id,name,grade,note,avatar:av,color:c[0],colorText:c[1]});
+  closeModal('studentModal');
+  showToast('生徒を登録しました（ID: '+id+'）');
+  renderAdminStudents();
+}
+
+function deleteStudent(id) {
+  if (!confirm('この生徒を削除しますか？')) return;
+  db.students = db.students.filter(s=>s.id!==id);
+  showToast('削除しました');
+  renderAdminStudents();
+}
+
+// ========== COMMENT MODAL ==========
+function openCommentModal(studentId) {
+  commentTargetId = studentId;
+  const st = db.students.find(s=>s.id===studentId);
+  document.getElementById('commentModalTitle').textContent = (st?.name||'')+'さんへのコメント';
+  document.getElementById('commentText').value = db.comments[studentId]||'';
+  openModal('commentModal');
+}
+
+function saveComment() {
+  const text = document.getElementById('commentText').value.trim();
+  if (!text) { showToast('コメントを入力してください'); return; }
+  db.comments[commentTargetId] = text;
+  closeModal('commentModal');
+  showToast('コメントを保存しました');
+}
+
+// ========== STUDENT ==========
+function studentTab(tab) {
+  if (tab==='home') { showScreen('studentHome'); renderStudentHome(); }
+  else if (tab==='log') { showScreen('studentLog'); initLog(); }
+  else if (tab==='question') { showScreen('studentQuestion'); renderQuestions(); }
+}
+
+function renderStudentHome() {
+  const el = document.getElementById('studentHwList');
+  const myHws = db.homeworks.filter(h=>h.target==='all'||h.target===currentUser.id);
+  if (!myHws.length) {
+    el.innerHTML='<div class="empty"><div class="empty-icon">🎉</div><div class="empty-title">現在宿題はありません</div></div>';
+    return;
+  }
+  const today = new Date(); today.setHours(0,0,0,0);
+  el.innerHTML = '<div style="padding:16px 16px 0;">' + myHws.map(h=>{
+    const subj = SUBJECTS[h.subject]||{label:h.subject,cls:''};
+    const sub = db.submissions.find(s=>s.hwId===h.id&&s.studentId===currentUser.id);
+    const deadline = new Date(h.deadline);
+    const daysLeft = Math.ceil((deadline-today)/(1000*60*60*24));
+    const urgent = daysLeft<=2 && !sub;
+    return `<div class="hw-card">
+      <div class="hw-card-header">
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span class="subject-tag ${subj.cls}">${subj.label}</span>
+            ${sub?'<span class="badge badge-green">✅ 提出済</span>':'<span class="badge badge-amber">未提出</span>'}
+          </div>
+          <div class="hw-title">${h.content}</div>
+          <div class="hw-deadline ${urgent?'urgent':''}">
+            📅 ${h.deadline} ${!sub?(daysLeft>0?'（あと'+daysLeft+'日）':'（期限切れ）'):''}
+          </div>
+        </div>
+      </div>
+      ${!sub?`<div class="hw-card-body">
+        <button class="btn btn-success btn-full" onclick="openSubmitModal('${h.id}','${h.content}')">📤 提出する</button>
+      </div>`:`<div class="hw-card-body">
+        <div style="background:var(--green-light);border-radius:var(--radius-sm);padding:10px;font-size:12px;color:var(--green);font-weight:600;">✅ ${sub.date} 提出済 · 勉強時間 ${sub.studyMin}分</div>
+      </div>`}
+    </div>`;
+  }).join('') + '</div>';
+}
+
+function openSubmitModal(hwId, title) {
+  currentHomeworkId = hwId;
+  hwUnderstand = '';
+  document.getElementById('submitModalTitle').textContent = title.slice(0,20)+'...';
+  document.getElementById('hwStudyTime').value='';
+  document.getElementById('hwComment').value='';
+  document.getElementById('hwPreview').innerHTML='';
+  document.querySelectorAll('#hwUnderstandPicker .understand-btn').forEach(b=>{b.classList.remove('sel');});
+  openModal('submitModal');
+}
+
+function setHwUnderstand(v, btn) {
+  hwUnderstand = v;
+  document.querySelectorAll('#hwUnderstandPicker .understand-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+
+function submitHomework() {
+  if (!hwUnderstand) { showToast('理解度を選択してください'); return; }
+  const studyMin = parseInt(document.getElementById('hwStudyTime').value)||0;
+  const comment = document.getElementById('hwComment').value;
+  db.submissions.push({
+    id:'SUB'+Date.now(), hwId:currentHomeworkId, studentId:currentUser.id,
+    date:todayStr(), understand:hwUnderstand, studyMin, comment, photo:null
+  });
+  closeModal('submitModal');
+  showToast('✅ 提出しました！');
+  renderStudentHome();
+  // Supabase save
+  sbFetch('submissions', { method:'POST', body: JSON.stringify({hw_id:currentHomeworkId,student_id:currentUser.id,understand:hwUnderstand,study_min:studyMin,comment}) });
+}
+
+// ========== STUDY LOG ==========
+function initLog() {
+  document.getElementById('logDate').value = todayStr();
+  selectedUnderstand = '';
+  document.querySelectorAll('#understandPicker .understand-btn').forEach(b=>b.classList.remove('sel'));
+  renderLogHistory();
+}
+
+function setUnderstand(v, btn) {
+  selectedUnderstand = v;
+  document.querySelectorAll('#understandPicker .understand-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+
+function saveLog() {
+  const date = document.getElementById('logDate').value;
+  const minutes = parseInt(document.getElementById('logMinutes').value)||0;
+  const subject = document.getElementById('logSubject').value;
+  const memo = document.getElementById('logMemo').value;
+  if (!subject) { showToast('教科を選択してください'); return; }
+  if (!selectedUnderstand) { showToast('理解度を選択してください'); return; }
+  db.studyLogs.push({id:'L'+Date.now(),studentId:currentUser.id,date,subject,minutes,understand:selectedUnderstand,memo});
+  document.getElementById('logMinutes').value='';
+  document.getElementById('logMemo').value='';
+  document.getElementById('logSubject').value='';
+  selectedUnderstand='';
+  document.querySelectorAll('#understandPicker .understand-btn').forEach(b=>b.classList.remove('sel'));
+  showToast('学習記録を保存しました！');
+  renderLogHistory();
+  sbFetch('study_logs',{method:'POST',body:JSON.stringify({student_id:currentUser.id,date,subject,minutes,understand:selectedUnderstand,memo})});
+}
+
+function renderLogHistory() {
+  const logs = db.studyLogs.filter(l=>l.studentId===currentUser.id).slice().reverse().slice(0,5);
+  const el = document.getElementById('logHistory');
+  const uMap={'good':['😊','var(--green)'],'unsure':['😐','var(--amber)'],'bad':['😕','var(--red)']};
+  el.innerHTML = logs.length ? logs.map(l=>{
+    const subj = SUBJECTS[l.subject]||{label:l.subject,cls:''};
+    const [icon,col] = uMap[l.understand]||['',''];
+    return `<div class="card" style="margin-bottom:8px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <span class="subject-tag ${subj.cls}">${subj.label}</span>
+        <span style="font-size:11px;color:var(--gray-400);">${l.date}</span>
+        <span style="margin-left:auto;font-size:14px;color:${col};">${icon}</span>
+      </div>
+      <div style="font-size:13px;color:var(--gray-600);">⏱️ ${l.minutes}分${l.memo?' · '+l.memo:''}</div>
+    </div>`;
+  }).join('') : '<div class="empty" style="padding:20px;"><div class="empty-title">記録がありません</div></div>';
+}
+
+// ========== QUESTIONS ==========
+function triggerQUpload() { document.getElementById('qFileInput').click(); }
+function previewQPhoto(input) {
+  if (!input.files.length) return;
+  const url = URL.createObjectURL(input.files[0]);
+  document.getElementById('qPreview').innerHTML = `<img src="${url}" class="preview-img">`;
+}
+function triggerHwUpload() { document.getElementById('hwFileInput').click(); }
+function previewHwPhoto(input) {
+  if (!input.files.length) return;
+  const url = URL.createObjectURL(input.files[0]);
+  document.getElementById('hwPreview').innerHTML = `<img src="${url}" class="preview-img">`;
+}
+
+function sendQuestion() {
+  const subject = document.getElementById('qSubject').value;
+  const content = document.getElementById('qContent').value.trim();
+  if (!subject) { showToast('教科を選択してください'); return; }
+  if (!content) { showToast('質問内容を入力してください'); return; }
+  db.questions.push({id:'Q'+Date.now(),studentId:currentUser.id,subject,content,date:todayStr(),photo:null});
+  document.getElementById('qContent').value='';
+  document.getElementById('qSubject').value='';
+  document.getElementById('qPreview').innerHTML='';
+  showToast('✉️ 質問を送りました！');
+  renderQuestions();
+}
+
+function renderQuestions() {
+  const qs = db.questions.filter(q=>q.studentId===currentUser.id).slice().reverse();
+  const el = document.getElementById('questionList');
+  el.innerHTML = qs.length ? qs.map(q=>{
+    const subj = SUBJECTS[q.subject]||{label:q.subject,cls:''};
+    return `<div class="card" style="margin-bottom:8px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span class="subject-tag ${subj.cls}">${subj.label}</span>
+        <span style="font-size:11px;color:var(--gray-400);">${q.date}</span>
+      </div>
+      <div style="font-size:14px;color:var(--gray-800);line-height:1.6;">${q.content}</div>
+    </div>`;
+  }).join('') : '<div class="empty" style="padding:20px;"><div class="empty-title">質問がありません</div></div>';
+}
+
+// ========== PARENT ==========
+function renderParent() {
+  const st = currentUser;
+  const subs = db.submissions.filter(s=>s.studentId===st.id);
+  const allHws = db.homeworks.filter(h=>h.target==='all'||h.target===st.id);
+  const rate = allHws.length ? Math.round(subs.length/allHws.length*100) : 0;
+  const logs = db.studyLogs.filter(l=>l.studentId===st.id);
+  const totalMin = logs.reduce((a,b)=>a+b.minutes,0);
+
+  document.getElementById('parentRate').textContent = rate+'%';
+  document.getElementById('parentStudyMin').textContent = totalMin;
+  document.getElementById('parentSubmit').textContent = subs.length;
+  document.getElementById('parentRateBar').style.width = rate+'%';
+
+  const comment = db.comments[st.id]||'コメントはまだありません。';
+  document.getElementById('parentComment').innerHTML = `<div class="comment-card">
+    <div class="comment-from">📝 田中教室長より</div>
+    <div class="comment-text">${comment}</div>
+  </div>`;
+
+  const hwEl = document.getElementById('parentHwStatus');
+  hwEl.innerHTML = allHws.map(h=>{
+    const sub = subs.find(s=>s.hwId===h.id);
+    const subj = SUBJECTS[h.subject]||{label:h.subject,cls:''};
+    return `<div class="list-item" style="background:#fff;border-radius:var(--radius-sm);margin-bottom:6px;border:1px solid var(--gray-200);">
+      <div class="list-icon ${sub?'list-icon-green':'list-icon-red'}">${sub?'✅':'📋'}</div>
+      <div class="list-item-body">
+        <div class="list-item-title">${h.content.slice(0,28)}...</div>
+        <div class="list-item-sub"><span class="subject-tag ${subj.cls}" style="font-size:10px;padding:2px 6px;">${subj.label}</span> 期限: ${h.deadline}</div>
+      </div>
+      <span class="badge ${sub?'badge-green':'badge-red'}">${sub?'提出済':'未提出'}</span>
+    </div>`;
+  }).join('');
+
+  const logEl = document.getElementById('parentLogList');
+  logEl.innerHTML = logs.slice().reverse().slice(0,5).map(l=>{
+    const subj = SUBJECTS[l.subject]||{label:l.subject,cls:''};
+    const uMap={'good':'😊 よくわかった','unsure':'😐 少し不安','bad':'😕 わからない'};
+    return `<div class="list-item" style="background:#fff;border-radius:var(--radius-sm);margin-bottom:6px;border:1px solid var(--gray-200);">
+      <div class="list-icon list-icon-navy">⏱️</div>
+      <div class="list-item-body">
+        <div class="list-item-title">${l.date} · ${subj.label}</div>
+        <div class="list-item-sub">${l.minutes}分 · ${uMap[l.understand]||''}</div>
+      </div>
+    </div>`;
+  }).join('') || '<div style="color:var(--gray-400);font-size:13px;padding:12px;">記録がありません</div>';
+}
+
+// ========== UTILS ==========
+function todayStr() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow='';
+}
+
+document.querySelectorAll('.modal-overlay').forEach(o=>{
+  o.addEventListener('click',function(e){ if(e.target===this) closeModal(this.id); });
+});
+
+// ========== INIT ==========
+setLoginRole('admin');
+document.getElementById('todayDate') && (document.getElementById('todayDate').textContent = new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'}));
+</script>
+</body>
+</html>
